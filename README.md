@@ -9,7 +9,8 @@ data = pd.read_excel(file_path, engine='odf')
 ## 2. Фильтрация данных
 Реализованно с помощью встроенных функцию python
 ```
-descriptions = data['DESCRIPTION'].astype(str)
+iltered_data = data[(data['CWE-ID'] != 'NVD-CWE-Other') & (data['CVSS-V3'] != 'None') & (data['CVSS-V3'].notna())] 
+
 ```
 ## 3. Кластеризация
 ### a. Векторизация 
@@ -43,6 +44,7 @@ descriptions = data['DESCRIPTION'].astype(str)
 Будем использовать TF-IDF так как он отражает важность слова, что нам и надо (от модели FastText отказались так как надо обучать ее, так как она нуждается в коректеровке порамметров что долго)
 
 ```
+descriptions = filtered_data['DESCRIPTION'].astype(str)
 vectorizer = TfidfVectorizer(stop_words='english',max_features=1000)
 tfidf_matrix = vectorizer.fit_transform(descriptions)
 ```
@@ -55,7 +57,36 @@ tfidf_matrix = vectorizer.fit_transform(descriptions)
 - **Преимущества**: Хорошо справляется с кластерами произвольной формы, находит выбросы.
 - **Недостатки**: Необходимость подбора параметров (плотность), может плохо работать с кластерами разной плотности.
 
-Этими двумя методами будем кластеризировать. Далее сравним резултаты
-Параметры для DBSACAN выбпаны мотодом локтя
+DBSCAN:
+```
+dbscan = DBSCAN(eps=1.3, min_samples=10, metric='euclidean')
+clusters = dbscan.fit_predict(tfidf_matrix)
+```
+
+KMean
+```
+# Определение числа кластеров
+n_clusters = 100 
+kmeans = KMeans(n_clusters=n_clusters, random_state=394)
+
+# Применение KMeans для кластеризации
+kmeans.fit(tfidf_matrix)
+```
+Этими двумя методами будем кластеризировать. Далее сравним резултаты.
+  Параметры для DBSACAN выбраны мотодом локтя
+```
+k = 10  # min_samples
+neigh = NearestNeighbors(n_neighbors=k)
+nbrs = neigh.fit(tfidf_matrix)
+distances, indices = nbrs.kneighbors(tfidf_matrix)
+
+# Для каждого точки возьмем k-ое расстояние
+distances = np.sort(distances[:, k-1], axis=0)
+plt.plot(distances)
+plt.title("k-distance graph")
+plt.xlabel("Points sorted by distance")
+plt.ylabel(f"{k}-th nearest neighbor distance")
+plt.show()
+```
 ### 4. Анализ кластеров по CWE-ID и SEVERITY
 Преведены на грфиках 
