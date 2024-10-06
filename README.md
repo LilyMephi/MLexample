@@ -9,7 +9,7 @@ data = pd.read_excel(file_path, engine='odf')
 ## 2. Фильтрация данных
 Реализованно с помощью встроенных функцию python
 ```
-iltered_data = data[(data['CWE-ID'] != 'NVD-CWE-Other') & (data['CVSS-V3'] != 'None') & (data['CVSS-V3'].notna())] 
+filtered_data = data[(data['CWE-ID'] != 'NVD-CWE-Other') & (data['CVSS-V3'] != 'None') & (data['CVSS-V3'].notna())] 
 
 ```
 ## 3. Кластеризация
